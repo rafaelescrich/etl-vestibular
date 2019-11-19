@@ -1,0 +1,5 @@
+base_teste.txt
+etl-vestibular
+*.txt
+*.csv
+config.toml

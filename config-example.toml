@@ -1,0 +1,6 @@
+[database]
+host = "db"
+port = "5432"
+dbname = "db"
+user = "postgres"
+password = "etl-vestibular"
