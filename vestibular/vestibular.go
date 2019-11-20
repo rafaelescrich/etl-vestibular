@@ -2,13 +2,11 @@ package vestibular
 
 import (
 	"bufio"
-	"mime/multipart"
-	"strconv"
-	"strings"
+	"bytes"
+	"fmt"
 	"time"
 
 	"github.com/jinzhu/gorm"
-	"github.com/rafaelescrich/etl-vestibular/db"
 )
 
 // Metadata holds information about the file
@@ -56,8 +54,8 @@ type CandidateInfo struct {
 	EnsinoPublico        int
 }
 
-// Questionnaire has all socioeconomic question to the candidate
-type Questionnaire struct {
+// Question has all socioeconomic question to the candidate
+type Question struct {
 	gorm.Model
 	IDEvento       int
 	NumeroQuestao  int
@@ -66,9 +64,11 @@ type Questionnaire struct {
 	LiteralQuestao string
 }
 
-func scanLines(file multipart.File) (lines []string) {
+func scanLines(data []byte) (lines []string) {
 
-	scanner := bufio.NewScanner(file)
+	r := bytes.NewReader(data)
+
+	scanner := bufio.NewScanner(r)
 
 	scanner.Split(bufio.ScanLines)
 
@@ -79,69 +79,65 @@ func scanLines(file multipart.File) (lines []string) {
 	return
 }
 
-func saveCandidateInfo(cf CandidateInfo) (err error) {
+// Save file to database
+func Save(fileQuestionnaire []byte) (err error) {
 
-	db.DB.Create(&cf)
-
-	return
-}
-
-func saveQuestionnaire(file multipart.File, id uint) (err error) {
-
-	lines := scanLines(file)
+	linesQuestionnaire := scanLines(fileQuestionnaire)
 	if err != nil {
 		return
 	}
 
-	// lines -1 to remove the header
-	contents := make([]Content, len(lines)-1)
+	questions := []Question{}
 
-	for i, line := range lines {
-		if i == 0 {
-			continue
-		}
-		str := strings.Fields(line)
-
-		priv, err := strconv.Atoi(str[1])
-		if err != nil {
-			priv = 0
-		}
-
-		inc, err := strconv.Atoi(str[2])
-		if err != nil {
-			inc = 0
-		}
-
-		// i-1 because we skip the header of the file
-		contents[i-1] = Content{
-			cpf:                str[0],
-			private:            priv,
-			incompleto:         inc,
-			dataUltimaCompra:   str[3],
-			ticketMedio:        str[4],
-			ticketUltimaCompra: str[5],
-			lojaMaisFrequente:  str[6],
-			lojaUltimaCompra:   str[7],
-			metadataID:         id,
-		}
+	for _, str := range linesQuestionnaire {
+		var q Question
+		q = Question{}
+		fmt.Println(str)
 	}
 
-	// begin a transaction to reduce the time to save in the database
-	tx := db.DB.Begin()
+	// // lines -1 to remove the header
+	// contents := make([]Content, len(lines)-1)
 
-	// do some database operations in the transaction (use 'tx' from this point, not 'db')
-	for _, content := range contents {
-		tx.Create(&content)
-	}
+	// for i, line := range lines {
+	// 	if i == 0 {
+	// 		continue
+	// 	}
+	// 	str := strings.Fields(line)
 
-	// Or commit the transaction
-	tx.Commit()
+	// 	priv, err := strconv.Atoi(str[1])
+	// 	if err != nil {
+	// 		priv = 0
+	// 	}
+
+	// 	inc, err := strconv.Atoi(str[2])
+	// 	if err != nil {
+	// 		inc = 0
+	// 	}
+
+	// 	// i-1 because we skip the header of the file
+	// 	contents[i-1] = Content{
+	// 		cpf:                str[0],
+	// 		private:            priv,
+	// 		incompleto:         inc,
+	// 		dataUltimaCompra:   str[3],
+	// 		ticketMedio:        str[4],
+	// 		ticketUltimaCompra: str[5],
+	// 		lojaMaisFrequente:  str[6],
+	// 		lojaUltimaCompra:   str[7],
+	// 		metadataID:         id,
+	// 	}
+	// }
+
+	// // begin a transaction to reduce the time to save in the database
+	// tx := db.DB.Begin()
+
+	// // do some database operations in the transaction (use 'tx' from this point, not 'db')
+	// for _, content := range contents {
+	// 	tx.Create(&content)
+	// }
+
+	// // Or commit the transaction
+	// tx.Commit()
 
 	return nil
-}
-
-// Save file uploaded to database
-func Save(filename string, size int64, file multipart.File) (err error) {
-
-	return
 }

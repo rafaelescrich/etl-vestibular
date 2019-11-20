@@ -31,12 +31,21 @@ func main() {
 	// Add tables to db if they dont exist
 	migrate()
 
-	fptr := flag.String("file1", "test.txt", "file path to read from")
+	//populaDimensoes()
+
+	f := flag.String("file", "grade_socioeconomico.csv", "file path to read from")
 	flag.Parse()
-	data, err := ioutil.ReadFile(*fptr)
+	data, err := ioutil.ReadFile(*f)
 	if err != nil {
 		fmt.Println("File reading error", err)
 		return
 	}
-	fmt.Println("Contents of file:", string(data))
+
+	err = vestibular.Save(data)
+	if err != nil {
+		log.Fatal(err)
+	} else {
+		fmt.Printf("File load successfully")
+	}
+
 }

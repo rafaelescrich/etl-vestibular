@@ -3,3 +3,4 @@ etl-vestibular
 *.txt
 *.csv
 config.toml
+main
