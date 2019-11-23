@@ -12,7 +12,7 @@ import (
 )
 
 func migrate() {
-	db.DB.AutoMigrate(&vestibular.CandidateInfo{}, &vestibular.Questionnaire{})
+	db.DB.AutoMigrate(&vestibular.Question{})
 }
 
 func main() {

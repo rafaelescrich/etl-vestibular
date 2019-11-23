@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/jinzhu/gorm"
@@ -87,12 +89,42 @@ func Save(fileQuestionnaire []byte) (err error) {
 		return
 	}
 
-	questions := []Question{}
+	questions := make([]Question, len(linesQuestionnaire)-1)
 
-	for _, str := range linesQuestionnaire {
-		var q Question
-		q = Question{}
-		fmt.Println(str)
+	for i, str := range linesQuestionnaire {
+		// q := Question{}
+		if i == 0 {
+			continue
+		}
+		s := strings.Split(str, ",")
+		fmt.Println(s)
+
+		idEv, err := strconv.Atoi(s[0])
+		if err != nil {
+			return err
+		}
+
+		numQ, err := strconv.Atoi(s[1])
+		if err != nil {
+			return err
+		}
+		posini, err := strconv.Atoi(s[2])
+		if err != nil {
+			return err
+		}
+		tam, err := strconv.Atoi(s[3])
+		if err != nil {
+			return err
+		}
+
+		questions[i-1] = Question{
+			IDEvento:       idEv,
+			NumeroQuestao:  numQ,
+			PosicaoInicial: posini,
+			Tamanho:        tam,
+			LiteralQuestao: s[4],
+		}
+
 	}
 
 	// // lines -1 to remove the header
