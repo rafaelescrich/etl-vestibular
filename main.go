@@ -12,7 +12,7 @@ import (
 )
 
 func migrate() {
-	db.DB.AutoMigrate(&vestibular.Question{})
+	db.DB.AutoMigrate(&vestibular.Question{}, &vestibular.Code{}, &vestibular.CandidateInfo{})
 }
 
 func main() {
@@ -31,8 +31,6 @@ func main() {
 	// Add tables to db if they dont exist
 	migrate()
 
-	//populaDimensoes()
-
 	f := flag.String("file", "grade_socioeconomico.csv", "file path to read from")
 	flag.Parse()
 	data, err := ioutil.ReadFile(*f)
@@ -41,7 +39,37 @@ func main() {
 		return
 	}
 
-	err = vestibular.Save(data)
+	err = vestibular.SaveQuestions(data)
+	if err != nil {
+		log.Fatal(err)
+	} else {
+		fmt.Printf("File load successfully")
+	}
+
+	f2 := flag.String("file2", "codigo_questionario.csv", "file path to read from")
+	flag.Parse()
+	dataCode, err := ioutil.ReadFile(*f2)
+	if err != nil {
+		fmt.Println("File reading error", err)
+		return
+	}
+
+	err = vestibular.SaveCodes(dataCode)
+	if err != nil {
+		log.Fatal(err)
+	} else {
+		fmt.Printf("File load successfully")
+	}
+
+	f3 := flag.String("file3", "candidato.csv", "file path to read from")
+	flag.Parse()
+	dataCandidato, err := ioutil.ReadFile(*f2)
+	if err != nil {
+		fmt.Println("File reading error", err)
+		return
+	}
+
+	err = vestibular.SaveCandidatesInfo(dataCandidato)
 	if err != nil {
 		log.Fatal(err)
 	} else {
