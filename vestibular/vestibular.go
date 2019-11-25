@@ -182,7 +182,7 @@ func SaveCodes(fileCode []byte) (err error) {
 // SaveCandidatesInfo file candidate to database
 func SaveCandidatesInfo(fileCandidates []byte) (err error) {
 
-	timeLayout := "Jan 02 2006 03:04PM"
+	timeLayout := "Jan 2 2006 03:04PM"
 
 	linesCandidates := scanLines(fileCandidates)
 	if err != nil {
@@ -252,33 +252,43 @@ func SaveCandidatesInfo(fileCandidates []byte) (err error) {
 		var class int
 		if s[13] == "NULL" {
 			class = 0
-		}
-
-		class, err = strconv.Atoi(s[13])
-		if err != nil {
-			return err
+		} else {
+			class, err = strconv.Atoi(s[13])
+			if err != nil {
+				return err
+			}
 		}
 
 		estab := s[14]
 
-		f, err := strconv.ParseFloat(s[14], 64)
+		var f float64
+		if s[15] == "NULL" {
+			f = 00.00
+		} else {
+			f, err = strconv.ParseFloat(s[15], 64)
+			if err != nil {
+				return err
+			}
+		}
+
+		idrac, err := strconv.Atoi(s[16])
 		if err != nil {
 			return err
 		}
 
-		idrac, err := strconv.Atoi(s[15])
+		idcat, err := strconv.Atoi(s[17])
 		if err != nil {
 			return err
 		}
 
-		idcat, err := strconv.Atoi(s[16])
-		if err != nil {
-			return err
-		}
-
-		ens, err := strconv.Atoi(s[17])
-		if err != nil {
-			return err
+		var ens int
+		if s[18] == "NULL" {
+			ens = 0
+		} else {
+			ens, err = strconv.Atoi(s[18])
+			if err != nil {
+				return err
+			}
 		}
 
 		candidatesInfo[i-1] = CandidateInfo{
@@ -313,18 +323,24 @@ func SaveCandidatesInfo(fileCandidates []byte) (err error) {
 	return nil
 }
 
-func parseAnswer(answer string, idEvento int) (answers []GradeSocioeconomico) {
+func parseAnswer(answer string, idEvento int) []GradeSocioeconomico {
 
 	runes := []rune(answer)
 
-	var questions []Question
+	questions := make([]Question, 34)
+
+	answers := make([]GradeSocioeconomico, 34)
 
 	var code Code
 
 	// Get first matched record
-	db.DB.Where("id_evento = ? AND numero_questao = ?", idEvento).Find(&questions)
+	db.DB.Where("id_evento = ?", idEvento).Find(&questions)
 
 	for n, question := range questions {
+
+		if n == 34 {
+			break
+		}
 
 		tam := question.Tamanho
 		posInicial := question.PosicaoInicial
@@ -343,5 +359,5 @@ func parseAnswer(answer string, idEvento int) (answers []GradeSocioeconomico) {
 		}
 	}
 
-	return
+	return answers
 }
