@@ -63,7 +63,7 @@ func main() {
 
 	f3 := flag.String("file3", "candidato.csv", "file path to read from")
 	flag.Parse()
-	dataCandidato, err := ioutil.ReadFile(*f2)
+	dataCandidato, err := ioutil.ReadFile(*f3)
 	if err != nil {
 		fmt.Println("File reading error", err)
 		return

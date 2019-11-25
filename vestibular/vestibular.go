@@ -34,7 +34,7 @@ type CandidateInfo struct {
 	Bairro               string
 	Cidade               string
 	UnidadeFederativa    string
-	GradeSocioeconomico  string
+	GradeSocioeconomico  []GradeSocioeconomico
 	ClassificacaoGeral   int
 	Estabelecimento2Grau string
 	AcertosTotal         float64
@@ -189,7 +189,7 @@ func SaveCandidatesInfo(fileCandidates []byte) (err error) {
 		return
 	}
 
-	candidatesInfo := make([]Code, len(linesCandidates)-1)
+	candidatesInfo := make([]CandidateInfo, len(linesCandidates)-1)
 
 	for i, str := range linesCandidates {
 		if i == 0 {
@@ -247,9 +247,14 @@ func SaveCandidatesInfo(fileCandidates []byte) (err error) {
 
 		unidfed := s[11]
 
-		//gradsocioecon
+		answers := parseAnswer(s[12], idEv)
 
-		class, err := strconv.Atoi(s[13])
+		var class int
+		if s[13] == "NULL" {
+			class = 0
+		}
+
+		class, err = strconv.Atoi(s[13])
 		if err != nil {
 			return err
 		}
@@ -289,7 +294,7 @@ func SaveCandidatesInfo(fileCandidates []byte) (err error) {
 			Bairro:               bairro,
 			Cidade:               cidade,
 			UnidadeFederativa:    unidfed,
-			GradeSocioeconomico:  "mudar pra outra estrutura",
+			GradeSocioeconomico:  answers,
 			ClassificacaoGeral:   class,
 			Estabelecimento2Grau: estab,
 			AcertosTotal:         f,
@@ -308,6 +313,35 @@ func SaveCandidatesInfo(fileCandidates []byte) (err error) {
 	return nil
 }
 
-func parseAnswer(answer string) (grad GradeSocioeconomico) {
+func parseAnswer(answer string, idEvento int) (answers []GradeSocioeconomico) {
+
+	runes := []rune(answer)
+
+	var questions []Question
+
+	var code Code
+
+	// Get first matched record
+	db.DB.Where("id_evento = ? AND numero_questao = ?", idEvento).Find(&questions)
+
+	for n, question := range questions {
+
+		tam := question.Tamanho
+		posInicial := question.PosicaoInicial
+		posFinal := posInicial + tam
+
+		numQuestao := question.NumeroQuestao
+
+		idcod := string(runes[posInicial:posFinal])
+
+		// Get first matched record
+		db.DB.Where("id_evento = ? AND numero_questao = ? AND id_codigo = ?", idEvento, numQuestao, idcod).First(&code)
+
+		answers[n] = GradeSocioeconomico{
+			Question: question,
+			Code:     code,
+		}
+	}
+
 	return
 }
